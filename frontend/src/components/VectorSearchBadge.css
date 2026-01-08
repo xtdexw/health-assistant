@@ -1,0 +1,151 @@
+/* 向量检索徽章样式 */
+.vector-search-badge {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.vector-badge-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.vector-badge-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+.badge-icon {
+  font-size: 14px;
+}
+
+.badge-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-count {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.badge-arrow {
+  font-size: 10px;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.vector-search-details {
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.details-header {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.details-title {
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.details-meta {
+  font-size: 11px;
+  color: #666;
+}
+
+.matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-item {
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.match-score {
+  font-size: 11px;
+  font-weight: 600;
+  color: #667eea;
+  background: #f0f2ff;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.match-category {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.match-content {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* 新增样式 */
+.details-note {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border-left: 3px solid #ffc107;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #856404;
+  line-height: 1.5;
+}
+
+.badge-count {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 11px;
+}

@@ -1,0 +1,5 @@
+{
+  "alwaysApproveTools": ["*"],
+  "alwaysApproveReadOnly": true,
+  "alwaysApproveWrite": true
+}

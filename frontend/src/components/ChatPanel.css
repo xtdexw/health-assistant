@@ -1,0 +1,475 @@
+/* ========================================
+   聊天面板 - 简化重设计
+   ======================================== */
+
+.chat-panel {
+  height: 100%;
+  background: white;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 聊天头部 */
+.chat-header {
+  flex-shrink: 0;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.chat-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.chat-header .subtitle {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* 快捷问题 */
+.quick-questions {
+  flex-shrink: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.quick-title {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.quick-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  text-align: left;
+}
+
+.quick-btn:hover:not(:disabled) {
+  background: #f0fdf4;
+  border-color: #10b981;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.quick-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quick-icon {
+  font-size: 18px;
+}
+
+.quick-text {
+  flex: 1;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* 消息容器 - 关键：使用 flex: 1 和 overflow */
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: #fafafa;
+}
+
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #9ca3af;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.empty-state small {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* 消息样式 */
+.message {
+  display: flex;
+  margin-bottom: 16px;
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-user {
+  justify-content: flex-end;
+}
+
+.message-assistant {
+  justify-content: flex-start;
+}
+
+.message-system {
+  justify-content: center;
+}
+
+.message-content {
+  max-width: 80%;
+  padding: 12px 18px;
+  border-radius: 16px;
+  position: relative;
+  line-height: 1.6;
+}
+
+.message-user .message-content {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.message-assistant .message-content {
+  background: white;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.message-system .message-content {
+  background: transparent;
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.message-time {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.7;
+}
+
+.message-user .message-time {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.message-assistant .message-time {
+  color: #9ca3af;
+}
+
+/* 文本内容 */
+.text-content {
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 错误消息 */
+.error-message {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid #fecaca;
+}
+
+/* 思考消息 */
+.thinking-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.thinking-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.thinking-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: thinking 1.4s infinite ease-in-out both;
+}
+
+.thinking-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes thinking {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 图片预览区 */
+.image-preview {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-image {
+  position: relative;
+  display: inline-block;
+  align-self: flex-start;
+  max-width: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.preview-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.clear-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.clear-image-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.analyze-image-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-start;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.analyze-image-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.analyze-image-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 输入区域 */
+.input-area {
+  flex-shrink: 0;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 0 0 12px 12px;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 14px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: #fafafa;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: #10b981;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.chat-input:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+
+.chat-input::placeholder {
+  color: #9ca3af;
+}
+
+.send-btn,
+.image-btn {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.send-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.send-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.send-btn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.image-btn {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 14px 18px;
+  font-size: 18px;
+}
+
+.image-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.image-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input-hint {
+  margin-top: 10px;
+}
+
+.input-hint small {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .quick-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .message-content {
+    max-width: 85%;
+  }
+
+  .input-row {
+    flex-wrap: wrap;
+  }
+
+  .send-btn,
+  .image-btn {
+    flex: 1;
+  }
+}
