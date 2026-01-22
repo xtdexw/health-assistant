@@ -20,7 +20,7 @@ class CredentialsConfig:
     # 加密测试密钥（base64编码，避免明文泄露）
     # 生产环境应使用环境变量覆盖
     _ENCRYPTED_TEST_KEYS = {
-        'modelscope_key': 'bXMtNDAwY2NlYzItMWQzYi00ODM3LWFlNWItNTdjYzQzZWFkZmUx'
+        'modelscope_key': 'bXMtMTEwYjgwZjktYWU1YS00NTkwLTkxZDQtMDhiYzhlNTQ2MDNh'
     }
 
     @staticmethod
