@@ -7,6 +7,46 @@ import CredentialService from './services/credentialService';
 import './App.css';
 
 /**
+ * 从SDK消息中提取用户友好的错误信息
+ */
+function extractSDKErrorMessage(message) {
+  const msg = message.message || '';
+
+  // 优先提取包含实际描述的消息（如"您的积分不足, 请及时充值"）
+  // 而不是技术性消息（如"startSession请求失败"）
+
+  // 提取 "Error: " 后面的内容
+  const errorMatch = msg.match(/Error:\s*(.+)/);
+  if (!errorMatch) {
+    return msg;
+  }
+
+  let errorText = errorMatch[1];
+
+  // 移除错误码前缀 (如 "10003, ")
+  errorText = errorText.replace(/^\d+,\s*/, '');
+
+  // 移除 [ResourceManager] 标记
+  errorText = errorText.replace(/\[ResourceManager\]\s*Error:\s*/, '');
+
+  // 过滤掉纯技术性的错误消息
+  const technicalErrors = [
+    'startSession请求失败',
+    'stopSession请求失败',
+    '请求失败',
+    'session错误'
+  ];
+
+  if (technicalErrors.some(techErr => errorText.includes(techErr))) {
+    // 如果是纯技术性错误，尝试从原始消息中找更有用的信息
+    // 或者返回一个通用的友好提示
+    return errorText.includes('积分') ? errorText : '服务连接失败，请检查密钥配置或账户余额';
+  }
+
+  return errorText;
+}
+
+/**
  * 主应用组件
  * 健康咨询数字人 - 简洁版界面
  */
@@ -91,11 +131,23 @@ function App() {
         },
 
         onMessage: (message) => {
-          if (message.code === 1 || message.code >= 50000) {
-            const errorMsg = message.message || '连接失败';
+          // 处理各种错误类型
+          let errorMsg = null;
+
+          if (message.code === 1) {
+            // 成功消息，不处理
+            return;
+          } else if (message.code !== 1) {
+            // 所有错误码都直接显示SDK原始消息
+            errorMsg = extractSDKErrorMessage(message);
+          }
+
+          if (errorMsg) {
+            console.error('[App] SDK错误:', message);
             setConnectionError(errorMsg);
             setIsConnecting(false);
             setIsConnected(false);
+            setAvatarState('offline');
           }
         }
       };

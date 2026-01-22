@@ -87,15 +87,23 @@ class QwenVLClient:
             })
 
         try:
+            logger.info(f"[LLM] 开始流式调用: {text[:50]}...")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{'role': 'user', 'content': content}],
                 stream=True
             )
 
+            chunk_count = 0
             for chunk in response:
                 if chunk.choices:
-                    yield chunk.choices[0].delta.content or ""
+                    delta_content = chunk.choices[0].delta.content
+                    if delta_content:
+                        chunk_count += 1
+                        logger.debug(f"[LLM] 发送chunk #{chunk_count}: '{delta_content}'")
+                        yield delta_content
+
+            logger.info(f"[LLM] 流式调用完成，共发送{chunk_count}个chunk")
 
         except Exception as e:
             logger.error(f"LLM流式调用失败: {e}")

@@ -41,40 +41,73 @@
 
 ### 1. 安装依赖
 
-**前端**
+**前端依赖**
 ```bash
 cd frontend
 npm install
 ```
 
-**后端**
+**后端依赖（需要先创建虚拟环境）**
 ```bash
 cd backend
+
+# 创建Python虚拟环境（仅首次需要）
+python -m venv venv
+
+# 激活虚拟环境
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# 安装依赖
 pip install -r requirements.txt
 ```
 
 ### 2. 启动服务
 
-**使用启动脚本（推荐）**
-```bash
-start.bat
-```
+**方式一：使用启动脚本（Windows推荐）**
 
-**或手动启动**
+双击 `start.bat` 文件即可自动启动前后端服务。
 
-启动后端：
+**方式二：手动启动**
+
+需要开两个终端窗口：
+
+**终端1 - 启动后端**
 ```bash
 cd backend
+
+# 激活虚拟环境
+venv\Scripts\activate
+
+# 启动后端服务
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-启动前端：
+看到以下输出表示后端启动成功：
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000
+```
+
+**终端2 - 启动前端**
 ```bash
 cd frontend
 npm start
 ```
 
-### 3. 配置密钥
+看到以下输出表示前端启动成功：
+```
+Compiled successfully!
+You can now view health-assistant-frontend in the browser.
+  Local:            http://localhost:3000
+```
+
+### 3. 访问应用
+
+打开浏览器访问：**http://localhost:3000**
+
+### 4. 配置密钥（首次使用）
 
 访问 http://localhost:3000
 

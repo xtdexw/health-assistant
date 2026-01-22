@@ -3,7 +3,7 @@
 负责对话流程控制和响应生成
 """
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, AsyncGenerator
 from enum import Enum
 
 from app.services.llm_service import qwen_client
@@ -207,6 +207,81 @@ class DialogueManager:
             'user_profile': {}
         }
         logger.info("对话状态已重置")
+
+    async def process_user_input_stream(
+        self,
+        user_input: str,
+        image_url: Optional[str] = None,
+        knowledge_base: Optional[List[Dict]] = None
+    ) -> AsyncGenerator[Dict, None]:
+        """
+        处理用户输入（流式输出版本）
+
+        Args:
+            user_input: 用户输入文本
+            image_url: 图片URL（可选）
+            knowledge_base: 知识库（可选）
+
+        Yields:
+            包含 content 和/或 vector_search 的字典
+        """
+        try:
+            # 1. 意图识别
+            intent = await self._classify_intent(user_input)
+            logger.info(f"识别意图: {intent.value}")
+
+            # 2. 知识检索
+            relevant_docs = []
+            vector_search_info = None
+            if knowledge_base:
+                matches = self.retriever.get_top_k_matches(
+                    user_input,
+                    knowledge_base,
+                    top_k=3
+                )
+
+                SIMILARITY_THRESHOLD = 0.40
+                max_score = max([m.get('score', 0) for m in matches]) if matches else 0
+
+                if max_score >= SIMILARITY_THRESHOLD:
+                    relevant_docs = [m['content'] for m in matches]
+                    logger.info(f"向量检索启用：检索到{len(relevant_docs)}条相关知识，最高相似度: {max_score:.2%}")
+
+                    # 构建向量检索信息
+                    vector_search_info = {
+                        'enabled': True,
+                        'total_knowledge': len(knowledge_base),
+                        'retrieved_count': len(matches),
+                        'top_matches': [
+                            {
+                                'score': m.get('score', 0),
+                                'category': m.get('category', ''),
+                                'content': m.get('content', '')[:100] + '...'
+                            }
+                            for m in matches
+                        ]
+                    }
+                else:
+                    logger.info(f"向量检索未启用：最高相似度{max_score:.2%}低于阈值{SIMILARITY_THRESHOLD:.2%}，判定为不相关问题")
+
+            # 3. 先发送向量检索信息（如果有）
+            if vector_search_info:
+                yield {'vector_search': vector_search_info}
+
+            # 4. 构建prompt
+            prompt = self._build_prompt(user_input, relevant_docs, intent, image_url is not None)
+
+            # 5. 流式生成回复
+            async for chunk in self.llm.chat_stream_async(prompt, image_url):
+                yield {'content': chunk}
+
+            # 6. 更新状态
+            self.state['intent'] = intent
+            self.state['turn_count'] += 1
+
+        except Exception as e:
+            logger.error(f"流式处理用户输入失败: {e}")
+            yield {'content': "抱歉，处理您的请求时出现了错误。请稍后再试。"}
 
 
 # 创建全局实例

@@ -15,6 +15,7 @@ function ChatPanel({ sdk, isConnected }) {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const messageIdCounter = useRef(0);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -23,8 +24,9 @@ function ChatPanel({ sdk, isConnected }) {
 
   // 添加消息到聊天历史
   const addMessage = (role, content, type = 'text', extraData = {}) => {
+    messageIdCounter.current += 1;
     const message = {
-      id: Date.now(),
+      id: messageIdCounter.current,
       role,
       content,
       type,
@@ -35,7 +37,26 @@ function ChatPanel({ sdk, isConnected }) {
     return message;
   };
 
-  // 发送文本消息
+  // 更新最后一条消息的内容（用于流式输出）
+  const updateLastMessage = (content, vectorSearch = null) => {
+    setMessages(prev => {
+      const newMessages = [...prev];
+      if (newMessages.length > 0) {
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (lastMessage.role === 'assistant') {
+          newMessages[newMessages.length - 1] = {
+            ...lastMessage,
+            content: content,
+            ...(vectorSearch && { vectorSearch })
+          };
+          console.log('[ChatPanel] === 更新消息内容 ===', content, vectorSearch);
+        }
+      }
+      return newMessages;
+    });
+  };
+
+  // 发送文本消息（使用流式输出）
   const handleSendMessage = async () => {
     if (!inputText.trim() || isLoading || !isConnected) {
       return;
@@ -43,6 +64,8 @@ function ChatPanel({ sdk, isConnected }) {
 
     const userMessage = inputText.trim();
     setInputText('');
+
+    console.log('[ChatPanel] === 开始发送消息 ===', userMessage);
 
     // 添加用户消息
     addMessage('user', userMessage);
@@ -54,32 +77,51 @@ function ChatPanel({ sdk, isConnected }) {
 
     setIsLoading(true);
 
+    // 先添加一个空的AI回复消息
+    addMessage('assistant', '', 'text');
+
+    // 切换到思考状态
+    if (sdk) {
+      sdk.think();
+    }
+
+    // 用于累积完整的响应内容
+    let fullResponse = '';
+
     try {
-      // 发送到后端
-      const response = await chatService.sendMessage(userMessage);
-
-      // 切换到思考状态
-      if (sdk) {
-        sdk.think();
-      }
-
-      // 等待短暂时间模拟思考
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 添加AI回复
-      addMessage('assistant', response.response, 'text', {
-        vectorSearch: response.vector_search,
-        intent: response.intent
-      });
-
-      // 切换到说话状态
-      if (sdk) {
-        sdk.speak(response.response, true, true);
-      }
+      console.log('[ChatPanel] === 调用流式API ===');
+      // 使用流式API
+      await chatService.sendMessageStream(
+        userMessage,
+        null,
+        // onChunk - 接收到每个文本片段
+        (chunk) => {
+          console.log('[ChatPanel] === 收到片段 ===', chunk);
+          fullResponse += chunk;
+          updateLastMessage(fullResponse);
+        },
+        // onComplete - 流式响应完成
+        ({ vectorSearch } = {}) => {
+          console.log('[ChatPanel] === 流式响应完成 ===', fullResponse, vectorSearch);
+          // 更新最后一条消息，包含向量检索数据
+          updateLastMessage(fullResponse, vectorSearch);
+          // 切换到说话状态
+          if (sdk && fullResponse) {
+            sdk.speak(fullResponse, true, true);
+          }
+          setIsLoading(false);
+        },
+        // onError - 发生错误
+        (error) => {
+          console.error('[ChatPanel] === 流式响应错误 ===', error);
+          updateLastMessage(`错误: ${error.message}`);
+          setIsLoading(false);
+        }
+      );
 
     } catch (error) {
-      addMessage('system', `错误: ${error.message}`, 'error');
-    } finally {
+      console.error('[ChatPanel] === 发送消息异常 ===', error);
+      updateLastMessage(`错误: ${error.message}`);
       setIsLoading(false);
     }
   };
@@ -116,8 +158,9 @@ function ChatPanel({ sdk, isConnected }) {
       return;
     }
 
-    // 添加图片消息
-    addMessage('user', '[图片]', 'image');
+    // 添加图片消息，保存图片预览数据
+    const currentPreview = imagePreview;
+    addMessage('user', '[图片]', 'image', { imageData: currentPreview });
 
     if (sdk) {
       sdk.listen();
@@ -220,7 +263,11 @@ function ChatPanel({ sdk, isConnected }) {
             <div className="message-content">
               {msg.type === 'image' && msg.role === 'user' && (
                 <div className="message-image">
-                  📷 [图片]
+                  {msg.imageData ? (
+                    <img src={msg.imageData} alt="上传的图片" />
+                  ) : (
+                    <span>📷 [图片]</span>
+                  )}
                 </div>
               )}
               {msg.type === 'error' && (

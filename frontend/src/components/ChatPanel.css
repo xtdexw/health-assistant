@@ -236,6 +236,28 @@
   border: 1px solid #fecaca;
 }
 
+/* 消息中的图片 */
+.message-image {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.message-image img {
+  max-width: 250px;
+  max-height: 250px;
+  border-radius: 10px;
+  display: block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message-user .message-image img {
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+}
+
+.message-assistant .message-image img {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* 思考消息 */
 .thinking-message {
   display: flex;
