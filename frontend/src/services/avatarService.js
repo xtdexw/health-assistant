@@ -7,6 +7,7 @@ class AvatarService {
     this.sdk = null;
     this.isInitialized = false;
     this.stateChangeCallbacks = [];
+    this.lastError = null;  // 跟踪最后一次错误
   }
 
   /**
@@ -21,6 +22,11 @@ class AvatarService {
       throw new Error('SDK未加载，请确保已引入xmovAvatar脚本');
     }
 
+    console.log('[AvatarService] 开始初始化SDK', {
+      appId: config.appId,
+      gatewayServer: config.gatewayServer
+    });
+
     return new Promise((resolve, reject) => {
       try {
         const avatarSDK = new XmovAvatar({
@@ -31,6 +37,7 @@ class AvatarService {
 
           // 状态变化回调
           onStateChange: (state) => {
+            console.log('[AvatarService] SDK状态变化:', state);
             this._notifyStateChange('state', state);
             if (config.onStateChange) {
               config.onStateChange(state);
@@ -39,6 +46,7 @@ class AvatarService {
 
           // SDK状态变化回调
           onStatusChange: (status) => {
+            console.log('[AvatarService] SDK状态码变化:', status);
             this._notifyStateChange('status', status);
             if (config.onStatusChange) {
               config.onStatusChange(status);
@@ -46,6 +54,7 @@ class AvatarService {
 
             // 检测到断开连接
             if (status === 4) { // close
+              console.log('[AvatarService] SDK已断开连接');
               this.isInitialized = false;
               this.sdk = null;
             }
@@ -53,18 +62,82 @@ class AvatarService {
 
           // 消息回调
           onMessage: (message) => {
-            if (config.onMessage) {
-              config.onMessage(message);
+            // 过滤掉正常的关闭消息，不打印日志
+            const isNormalClose = message.message &&
+              (message.message.includes('ttsa主动关闭') ||
+               message.message.includes('stop_reason":"user"') ||
+               message.message.includes('user'));
+
+            if (!isNormalClose) {
+              console.log('[AvatarService] SDK消息:', message);
             }
 
-            // 错误处理
-            if (message.code >= 50000) {
-              this._notifyStateChange('networkError', message);
+            if (config.onMessage) {
+              // 正常的关闭消息不传递给业务层
+              if (!isNormalClose) {
+                config.onMessage(message);
+              }
+            }
+
+            // 完整的错误处理
+            if (message.code === 1) {
+              // 成功消息 - 清除错误
+              if (!isNormalClose) {
+                console.log('[AvatarService] SDK操作成功:', message.message);
+              }
+              this.lastError = null;
+            } else if (message.code !== 1) {
+              // 错误消息 - 判断是否需要更新 lastError
+              const newError = message;
+
+              // 如果已有错误，判断新错误是否更有用
+              if (this.lastError) {
+                // 技术性错误列表（不友好的错误消息）
+                const technicalErrors = ['startSession请求失败', 'stopSession请求失败', '请求失败'];
+                const isNewTechnical = technicalErrors.some(err =>
+                  newError.message && newError.message.includes(err)
+                );
+                const isOldTechnical = technicalErrors.some(err =>
+                  this.lastError.message && this.lastError.message.includes(err)
+                );
+
+                // 如果新错误是技术性的，但旧错误更有用（如包含具体原因），则保留旧错误
+                if (isNewTechnical && !isOldTechnical) {
+                  console.log('[AvatarService] 保留更有用的错误消息:', this.lastError.message);
+                  return; // 不更新 lastError
+                }
+              }
+
+              // 更新 lastError
+              if (message.code >= 10000 && message.code < 20000) {
+                console.error('[AvatarService] 初始化错误:', message);
+                this.lastError = message;
+                this._notifyStateChange('initError', message);
+              } else if (message.code >= 20000 && message.code < 30000) {
+                console.error('[AvatarService] 前端处理错误:', message);
+                this.lastError = message;
+                this._notifyStateChange('processError', message);
+              } else if (message.code >= 30000 && message.code < 40000) {
+                console.error('[AvatarService] 资源加载错误:', message);
+                this.lastError = message;
+                this._notifyStateChange('resourceError', message);
+              } else if (message.code >= 40000 && message.code < 50000) {
+                console.error('[AvatarService] 数据解码错误:', message);
+                this.lastError = message;
+                this._notifyStateChange('decodeError', message);
+              } else if (message.code >= 50000) {
+                console.error('[AvatarService] 网络错误:', message);
+                this.lastError = message;
+                this._notifyStateChange('networkError', message);
+              } else {
+                console.warn('[AvatarService] 其他消息:', message);
+              }
             }
           },
 
           // Widget事件回调
           onWidgetEvent: (data) => {
+            console.log('[AvatarService] Widget事件:', data);
             if (config.onWidgetEvent) {
               config.onWidgetEvent(data);
             }
@@ -72,6 +145,7 @@ class AvatarService {
 
           // 语音状态回调
           onVoiceStateChange: (status) => {
+            console.log('[AvatarService] 语音状态变化:', status);
             this._notifyStateChange('voice', status);
             if (config.onVoiceStateChange) {
               config.onVoiceStateChange(status);
@@ -81,13 +155,15 @@ class AvatarService {
           // 自定义Widget处理
           proxyWidget: config.proxyWidget || {},
 
-          // 是否显示日志
-          enableLogger: config.enableLogger || false
+          // 是否显示日志 - 默认开启以便调试
+          enableLogger: config.enableLogger !== undefined ? config.enableLogger : true
         });
 
+        console.log('[AvatarService] SDK实例创建成功');
         this.sdk = avatarSDK;
         resolve(avatarSDK);
       } catch (error) {
+        console.error('[AvatarService] SDK实例创建失败:', error);
         reject(error);
       }
     });
@@ -103,17 +179,32 @@ class AvatarService {
       throw new Error('SDK未初始化，请先调用initialize()');
     }
 
+    // 清除之前的错误
+    this.lastError = null;
+    console.log('[AvatarService] 开始初始化连接...');
+
     try {
       await this.sdk.init({
         onDownloadProgress: (progress) => {
+          console.log(`[AvatarService] 资源下载进度: ${progress}%`);
           if (options.onDownloadProgress) {
             options.onDownloadProgress(progress);
           }
         }
       });
 
+      // 检查初始化过程中是否有错误
+      if (this.lastError) {
+        console.error('[AvatarService] 初始化过程中发生错误:', this.lastError);
+        this.isInitialized = false;
+        throw new Error(this.lastError.message || '初始化失败');
+      }
+
+      console.log('[AvatarService] 初始化连接成功');
       this.isInitialized = true;
-      } catch (error) {
+    } catch (error) {
+      console.error('[AvatarService] 初始化连接失败:', error);
+      this.isInitialized = false;
       throw error;
     }
   }
@@ -281,7 +372,8 @@ class AvatarService {
       await this.sdk.destroy();
       this.sdk = null;
       this.isInitialized = false;
-      } catch (error) {
+      this.lastError = null;
+    } catch (error) {
       throw error;
     }
   }
@@ -316,7 +408,7 @@ class AvatarService {
       try {
         callback(eventType, data);
       } catch (error) {
-        }
+      }
     });
   }
 
