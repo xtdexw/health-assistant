@@ -8,8 +8,6 @@ from fastapi.responses import JSONResponse
 import logging
 
 from app.api import chat
-from app.api import debug
-from app.api import test_vector
 from app.config.credentials import credentials_config
 
 # 配置日志
@@ -37,8 +35,6 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(chat.router)
-app.include_router(debug.router)
-app.include_router(test_vector.router)
 
 
 @app.get("/")
