@@ -27,7 +27,7 @@ function CredentialModal({ isOpen, onClose, onCredentialsReady }) {
         const saved = CredentialService.getAllCredentials();
         setCredentials(saved);
         // 检查是否是测试密钥
-        const testAppId = '48d1c03e005840c1b1eaa84e3571dfa5';
+        const testAppId = 'a687704c18af4bc9997829dca2e635dc';
         if (saved.appId === testAppId) {
           setIsTestCredentials(true);
         }
@@ -90,9 +90,9 @@ function CredentialModal({ isOpen, onClose, onCredentialsReady }) {
   const confirmLoadTestKey = () => {
     setShowLoadTestConfirm(false);
     const testCredentials = {
-      appId: '48d1c03e005840c1b1eaa84e3571dfa5',
-      appSecret: 'bdd2e69045ca432ab5f2f5ab79e45091',
-      apikey: 'ms-400ccec2-1d3b-4837-ae5b-57cc43eadfe1'
+      appId: 'a687704c18af4bc9997829dca2e635dc',
+      appSecret: 'f333408c41b04ea59944bfb8c4984879',
+      apikey: 'ms-110b80f9-ae5a-4590-91d4-08bc8e54603a'
     };
     setCredentials(testCredentials);
     setIsTestCredentials(true);
