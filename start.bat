@@ -49,7 +49,7 @@ if not exist "frontend\node_modules" (
 
 echo.
 echo [2/3] 启动后端服务...
-start cmd /k "cd backend && venv\Scripts\activate && python -m app.main"
+start cmd /k "cd backend && call venv\Scripts\activate.bat && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
 REM 等待后端启动
 echo 等待后端服务启动...
