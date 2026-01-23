@@ -408,7 +408,7 @@ class AvatarService {
       try {
         callback(eventType, data);
       } catch (error) {
-        }
+      }
     });
   }
 
